@@ -1099,3 +1099,56 @@ pre {
   color: var(--text-main);
   text-decoration: underline;
 }
+
+/* Voice Persona & Age Chips */
+.persona-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin-top: 6px;
+}
+
+@media (max-width: 768px) {
+  .persona-chips-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.persona-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.persona-chip:hover {
+  background: rgba(139, 92, 246, 0.12);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.persona-chip.active {
+  background: rgba(139, 92, 246, 0.22);
+  border-color: var(--accent-purple);
+  color: #fff;
+  box-shadow: 0 0 16px var(--accent-purple-glow);
+}
+
+.persona-emoji {
+  font-size: 1.4rem;
+}
+
+.persona-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}

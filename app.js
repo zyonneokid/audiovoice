@@ -108,6 +108,62 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerDuration = document.getElementById('player-duration');
   let currentSpeechAudioUrl = null;
 
+  // Persona Elements (Female, Male, Baby, Kids, Teenage, Elderly)
+  const personaChips = document.querySelectorAll('.persona-chip');
+  const personaBadge = document.getElementById('persona-badge');
+  let selectedPersona = 'male';
+
+  const PERSONA_CONFIGS = {
+    male: {
+      name: '👨 Adult Male',
+      pitch: 0.85,
+      speed: 0.95,
+      timbre: 'warm',
+      playbackRate: 0.92,
+      gender: 'male'
+    },
+    female: {
+      name: '👩 Adult Female',
+      pitch: 1.25,
+      speed: 1.00,
+      timbre: 'normal',
+      playbackRate: 1.05,
+      gender: 'female'
+    },
+    baby: {
+      name: '👶 Baby / Toddler',
+      pitch: 1.95,
+      speed: 1.15,
+      timbre: 'normal',
+      playbackRate: 1.35,
+      gender: 'child'
+    },
+    kid: {
+      name: '🧒 Kids / Child',
+      pitch: 1.55,
+      speed: 1.10,
+      timbre: 'hero',
+      playbackRate: 1.20,
+      gender: 'child'
+    },
+    teenage: {
+      name: '🧑 Teenage',
+      pitch: 1.30,
+      speed: 1.05,
+      timbre: 'normal',
+      playbackRate: 1.08,
+      gender: 'any'
+    },
+    senior: {
+      name: '👵 Elderly / Senior',
+      pitch: 0.72,
+      speed: 0.85,
+      timbre: 'warm',
+      playbackRate: 0.85,
+      gender: 'any'
+    }
+  };
+
   // Dialogue Elements
   const dialogueContainer = document.getElementById('dialogue-lines-container');
   const btnPlayDialogue = document.getElementById('btn-play-all-dialogue');
@@ -461,12 +517,13 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.cancel();
       }
 
-      ttsAudioElement.src = audioUrl;
-      ttsAudioElement.playbackRate = parseFloat(speedSlider.value) || 1.0;
+      const personaConfig = PERSONA_CONFIGS[selectedPersona] || PERSONA_CONFIGS.male;
+      const userSpeed = parseFloat(speedSlider.value) || 1.0;
+      ttsAudioElement.playbackRate = Math.min(2.0, Math.max(0.5, personaConfig.playbackRate * userSpeed));
       ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
       generatedPlayerCard.style.display = 'block';
-      playerEngineLabel.textContent = `🎙️ Real ${lang === 'ml' ? 'Malayalam (മലയാളം)' : lang.toUpperCase()} Speech (Neural Audio)`;
-      playerDuration.textContent = 'Streaming Audio...';
+      playerEngineLabel.textContent = `🎙️ ${personaConfig.name} · Real ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()} Speech`;
+      playerDuration.textContent = 'Playing...';
 
       state.isPlaying = true;
       playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
@@ -936,6 +993,47 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
+  // VOICE PERSONA & AGE SELECTOR (Male, Female, Baby, Kids, Teenage, Elderly)
+  // ==========================================
+  function setupPersonaSelector() {
+    personaChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        personaChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        selectedPersona = chip.getAttribute('data-persona');
+        const config = PERSONA_CONFIGS[selectedPersona];
+        if (!config) return;
+
+        if (personaBadge) personaBadge.textContent = config.name;
+
+        // Apply sliders
+        pitchSlider.value = config.pitch;
+        valPitch.textContent = config.pitch;
+        speedSlider.value = config.speed;
+        valSpeed.textContent = config.speed + 'x';
+        timbreSelect.value = config.timbre;
+        valTimbre.textContent = timbreSelect.options[timbreSelect.selectedIndex].text.split(' ')[1] || 'Custom';
+        updateTextStats();
+
+        // If local speech synthesis voices are used, auto-select a matching gender voice
+        if (config.gender === 'female') {
+          const femaleVoice = state.voices.find(v => v.name.includes('Zira') || v.name.includes('Susan') || v.name.includes('Hazel') || v.name.includes('Jenny') || v.name.includes('Female'));
+          if (femaleVoice && !voiceSelect.value.startsWith('neural-')) {
+            voiceSelect.value = femaleVoice.name;
+            state.selectedVoice = femaleVoice;
+          }
+        } else if (config.gender === 'male') {
+          const maleVoice = state.voices.find(v => v.name.includes('David') || v.name.includes('George') || v.name.includes('Mark') || v.name.includes('Male'));
+          if (maleVoice && !voiceSelect.value.startsWith('neural-')) {
+            voiceSelect.value = maleVoice.name;
+            state.selectedVoice = maleVoice;
+          }
+        }
+      });
+    });
+  }
+
+  // ==========================================
   // PRESETS & SCRIPT LOADERS
   // ==========================================
   function setupPresets() {
@@ -1311,7 +1409,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const a = document.createElement('a');
       a.href = audioUrl;
       a.target = '_blank';
-      a.download = `voicestudio_${lang}_speech.mp3`;
+      a.download = `voicestudio_${lang}_${selectedPersona}.mp3`;
       document.body.appendChild(a);
       a.click();
       setTimeout(() => document.body.removeChild(a), 300);
@@ -1363,6 +1461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initAudioVisualizer();
   updateTextStats();
+  setupPersonaSelector();
   setupPresets();
   renderDialogueList();
   setupSoundMorphPresets();

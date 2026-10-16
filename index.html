@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VoiceStudio Web · AI Voice Generator & Multi-Dialogue Studio</title>
   <meta name="description" content="Browser-based VoiceStudio app for Text-to-Speech, Voice Cloning simulation, and Multi-Character Dialogue generation across hundreds of languages.">
+  <meta name="referrer" content="no-referrer">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -130,6 +131,40 @@
               <select id="tts-voice-select" class="custom-select">
                 <!-- Populated dynamically -->
               </select>
+            </div>
+          </div>
+
+          <!-- Voice Persona & Age Profiles (Female, Male, Baby, Kids, Teenage, Elderly) -->
+          <div class="form-group" style="margin-bottom: 16px;">
+            <label style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span>Voice Character & Age (Gender / Persona):</span>
+              <span id="persona-badge" class="badge badge-accent" style="font-size: 0.75rem;">👨 Adult Male</span>
+            </label>
+            <div class="persona-chips-grid">
+              <button type="button" class="persona-chip active" data-persona="male" title="Deep, warm masculine register">
+                <span class="persona-emoji">👨</span>
+                <span class="persona-name">Male</span>
+              </button>
+              <button type="button" class="persona-chip" data-persona="female" title="Clear, natural feminine register">
+                <span class="persona-emoji">👩</span>
+                <span class="persona-name">Female</span>
+              </button>
+              <button type="button" class="persona-chip" data-persona="baby" title="Cute, playful ultra-high pitch toddler sound">
+                <span class="persona-emoji">👶</span>
+                <span class="persona-name">Baby</span>
+              </button>
+              <button type="button" class="persona-chip" data-persona="kid" title="Cheerful, energetic young child voice">
+                <span class="persona-emoji">🧒</span>
+                <span class="persona-name">Kids</span>
+              </button>
+              <button type="button" class="persona-chip" data-persona="teenage" title="Lively, modern adolescent tone">
+                <span class="persona-emoji">🧑</span>
+                <span class="persona-name">Teenage</span>
+              </button>
+              <button type="button" class="persona-chip" data-persona="senior" title="Mature, deep cadence with gentle pacing">
+                <span class="persona-emoji">👵</span>
+                <span class="persona-name">Elderly</span>
+              </button>
             </div>
           </div>
 
