@@ -117,51 +117,57 @@ document.addEventListener('DOMContentLoaded', () => {
   const PERSONA_CONFIGS = {
     male: {
       name: '👨 Adult Male',
-      pitch: 0.85,
-      speed: 0.95,
+      pitch: 1.0,
+      speed: 1.0,
       timbre: 'warm',
-      playbackRate: 0.92,
-      gender: 'male'
+      playbackRate: 1.0,
+      gender: 'male',
+      vocalProfile: 'Deep Resonant Vocal Tract'
     },
     female: {
       name: '👩 Adult Female',
-      pitch: 1.25,
-      speed: 1.00,
+      pitch: 1.0,
+      speed: 1.0,
       timbre: 'normal',
-      playbackRate: 1.05,
-      gender: 'female'
+      playbackRate: 1.0,
+      gender: 'female',
+      vocalProfile: 'Sweet Feminine Register'
     },
     baby: {
       name: '👶 Baby / Toddler',
-      pitch: 1.95,
+      pitch: 1.4,
       speed: 1.15,
-      timbre: 'normal',
-      playbackRate: 1.35,
-      gender: 'child'
+      timbre: 'hero',
+      playbackRate: 1.0,
+      gender: 'child',
+      vocalProfile: 'Petite Infant Formant'
     },
     kid: {
       name: '🧒 Kids / Child',
-      pitch: 1.55,
-      speed: 1.10,
+      pitch: 1.25,
+      speed: 1.1,
       timbre: 'hero',
-      playbackRate: 1.20,
-      gender: 'child'
+      playbackRate: 1.0,
+      gender: 'child',
+      vocalProfile: 'Cheerful School Child Vocal Size'
     },
     teenage: {
       name: '🧑 Teenage',
-      pitch: 1.30,
+      pitch: 1.1,
       speed: 1.05,
       timbre: 'normal',
-      playbackRate: 1.08,
-      gender: 'any'
+      playbackRate: 1.0,
+      gender: 'any',
+      vocalProfile: 'Youthful Modern Cadence'
     },
     senior: {
       name: '👵 Elderly / Senior',
-      pitch: 0.72,
+      pitch: 0.8,
       speed: 0.85,
       timbre: 'warm',
-      playbackRate: 0.85,
-      gender: 'any'
+      playbackRate: 1.0,
+      gender: 'any',
+      vocalProfile: 'Mature Deep Grandfather Tone'
     }
   };
 
@@ -301,10 +307,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return 'en';
   }
 
-  function getAudioStreamUrl(text, lang) {
+  function getAudioStreamUrl(text, lang, persona = 'male', timbre = 'normal', pitch = 1.0, speed = 1.0) {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const params = new URLSearchParams({
+      tl: lang,
+      q: text,
+      persona: persona,
+      timbre: timbre,
+      pitch: pitch,
+      speed: speed
+    });
     if (isLocal) {
-      return `/api/tts?tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text)}`;
+      return `/api/tts?${params.toString()}`;
     } else {
       return `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(text)}`;
     }
@@ -511,17 +525,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // REAL NEURAL AUDIO ENGINE (For Malayalam, Hindi & Multilingual)
     if (isNeuralMode) {
       const lang = voiceName === 'neural-ml' ? 'ml' : voiceName === 'neural-hi' ? 'hi' : (detectedLang !== 'en' ? detectedLang : (langSelect.value !== 'all' ? langSelect.value : 'ml'));
-      const audioUrl = getAudioStreamUrl(text, lang);
+      const personaConfig = PERSONA_CONFIGS[selectedPersona] || PERSONA_CONFIGS.male;
+      const audioUrl = getAudioStreamUrl(text, lang, selectedPersona, timbreSelect.value, pitchSlider.value, speedSlider.value);
       currentSpeechAudioUrl = audioUrl;
 
       if (window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
       }
 
-      const personaConfig = PERSONA_CONFIGS[selectedPersona] || PERSONA_CONFIGS.male;
       generatedPlayerCard.style.display = 'block';
-      playerEngineLabel.textContent = `🎙️ ${personaConfig.name} · Real ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()} Speech`;
-      playerDuration.textContent = 'Loading audio...';
+      playerEngineLabel.textContent = `🎙️ ${personaConfig.name} · Real ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()} Speech (${personaConfig.vocalProfile})`;
+      playerDuration.textContent = 'Synthesizing AI Actor...';
 
       // Resume AudioContext if suspended
       if (!state.audioCtx) {
@@ -543,11 +557,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ttsAudioElement.muted = false;
           ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
 
-          const userSpeed = parseFloat(speedSlider.value) || 1.0;
-          const targetRate = Math.min(2.0, Math.max(0.5, personaConfig.playbackRate * userSpeed));
-
           ttsAudioElement.onloadedmetadata = () => {
-            ttsAudioElement.playbackRate = targetRate;
+            ttsAudioElement.playbackRate = 1.0;
             playerDuration.textContent = `${Math.round(ttsAudioElement.duration || 2)}s`;
           };
 
@@ -1518,7 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Download genuine neural MP3 audio (Real speech, no machine hum)
     if (isNeuralMode || detectedLang !== 'en') {
       const lang = voiceName === 'neural-ml' ? 'ml' : voiceName === 'neural-hi' ? 'hi' : (detectedLang !== 'en' ? detectedLang : 'ml');
-      const audioUrl = getAudioStreamUrl(text, lang);
+      const audioUrl = getAudioStreamUrl(text, lang, selectedPersona, timbreSelect.value, pitchSlider.value, speedSlider.value);
       
       const a = document.createElement('a');
       a.href = audioUrl;
