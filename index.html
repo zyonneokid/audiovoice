@@ -176,6 +176,15 @@
             </div>
           </div>
 
+          <!-- Generated Speech Audio Player -->
+          <div class="audio-player-card" id="generated-player-card" style="display:none; margin-bottom: 18px; padding: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 12px;">
+            <div class="player-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <span class="pill-label" id="player-engine-label" style="color: #c4b5fd;">🎙️ Generated Speech Audio</span>
+              <span id="player-duration" style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted);">Ready</span>
+            </div>
+            <audio id="tts-audio-element" controls style="width: 100%; border-radius: 8px;"></audio>
+          </div>
+
           <div class="action-bar">
             <button class="btn btn-primary btn-lg" id="btn-speak-now">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -183,13 +192,13 @@
               </svg>
               Generate & Play Voice
             </button>
-            <button class="btn btn-secondary btn-lg" id="btn-download-speech" title="Download Synthesized Audio File">
+            <button class="btn btn-secondary btn-lg" id="btn-download-speech" title="Download Real Audio File">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="7 10 12 15 17 10"/>
                 <line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
-              Download Audio (.wav)
+              Download Audio (.mp3)
             </button>
             <button class="btn btn-secondary btn-lg" id="btn-pause-speech">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

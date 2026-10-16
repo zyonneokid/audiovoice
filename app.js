@@ -101,6 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const historyContainer = document.getElementById('history-container');
   const btnClearHistory = document.getElementById('btn-clear-history');
 
+  // Generated Speech Player Elements
+  const generatedPlayerCard = document.getElementById('generated-player-card');
+  const ttsAudioElement = document.getElementById('tts-audio-element');
+  const playerEngineLabel = document.getElementById('player-engine-label');
+  const playerDuration = document.getElementById('player-duration');
+  let currentSpeechAudioUrl = null;
+
   // Dialogue Elements
   const dialogueContainer = document.getElementById('dialogue-lines-container');
   const btnPlayDialogue = document.getElementById('btn-play-all-dialogue');
@@ -226,21 +233,58 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function detectScriptLanguage(text) {
+    if (/[\u0D00-\u0D7F]/.test(text)) return 'ml'; // Malayalam
+    if (/[\u0900-\u097F]/.test(text)) return 'hi'; // Hindi
+    if (/[\u0B80-\u0BFF]/.test(text)) return 'ta'; // Tamil
+    if (/[\u0C00-\u0C7F]/.test(text)) return 'te'; // Telugu
+    if (/[\u0600-\u06FF]/.test(text)) return 'ar'; // Arabic
+    if (/[\u4E00-\u9FFF]/.test(text)) return 'zh'; // Chinese
+    if (/[\u3040-\u309F\u30A0-\u30FF]/.test(text)) return 'ja'; // Japanese
+    return 'en';
+  }
+
+  function getAudioStreamUrl(text, lang) {
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isLocal) {
+      return `/api/tts?tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text)}`;
+    } else {
+      return `https://translate.google.com/translate_tts?ie=UTF-8&tl=${encodeURIComponent(lang)}&client=tw-ob&q=${encodeURIComponent(text)}`;
+    }
+  }
+
   function populateVoiceSelector() {
     voiceSelect.innerHTML = '';
     const filterLang = langSelect.value;
+
+    // Always include High-Definition Neural Cloud Voices
+    if (filterLang === 'all' || filterLang === 'ml') {
+      const optMl = document.createElement('option');
+      optMl.value = 'neural-ml';
+      optMl.textContent = '✨ Neural Malayalam Voice (മലയാളം - Natural Online)';
+      voiceSelect.appendChild(optMl);
+    }
+
+    if (filterLang === 'all' || filterLang === 'hi') {
+      const optHi = document.createElement('option');
+      optHi.value = 'neural-hi';
+      optHi.textContent = '✨ Neural Hindi Voice (हिन्दी - Natural Online)';
+      voiceSelect.appendChild(optHi);
+    }
+
+    if (filterLang === 'all') {
+      const optAuto = document.createElement('option');
+      optAuto.value = 'neural-auto';
+      optAuto.textContent = '✨ Neural Multilingual (Auto-Detect 600+ Languages)';
+      voiceSelect.appendChild(optAuto);
+    }
 
     const filtered = state.voices.filter(v => {
       if (filterLang === 'all') return true;
       return v.lang.toLowerCase().startsWith(filterLang);
     });
 
-    if (filtered.length === 0) {
-      voiceSelect.innerHTML = '<option value="">No voices available for this language</option>';
-      return;
-    }
-
-    filtered.forEach((voice, index) => {
+    filtered.forEach((voice) => {
       const opt = document.createElement('option');
       opt.value = voice.name;
       const isNatural = voice.name.includes('Natural') || voice.name.includes('Neural') || voice.name.includes('Online');
@@ -248,12 +292,18 @@ document.addEventListener('DOMContentLoaded', () => {
       voiceSelect.appendChild(opt);
     });
 
-    // Default select
-    if (filtered.length > 0) {
-      // Prefer Natural / Neural voices
+    // Smart default selection
+    const text = textInput ? textInput.value : '';
+    const detected = detectScriptLanguage(text);
+
+    if (detected === 'ml' || filterLang === 'ml') {
+      voiceSelect.value = 'neural-ml';
+    } else if (filterLang === 'hi' || detected === 'hi') {
+      voiceSelect.value = 'neural-hi';
+    } else if (filterLang === 'all' && detected === 'en') {
+      // Default to preferred English voice if available
       const preferred = filtered.find(v => v.name.includes('Natural') || v.name.includes('Neural') || v.default) || filtered[0];
-      voiceSelect.value = preferred.name;
-      state.selectedVoice = preferred;
+      if (preferred) voiceSelect.value = preferred.name;
     }
   }
 
@@ -397,11 +447,63 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const voiceName = voiceSelect.value;
+    const detectedLang = detectScriptLanguage(text);
+    const isNeuralMode = voiceName.startsWith('neural-') || detectedLang === 'ml' || detectedLang === 'hi';
+
+    // REAL NEURAL AUDIO ENGINE (For Malayalam, Hindi & Multilingual)
+    if (isNeuralMode) {
+      const lang = voiceName === 'neural-ml' ? 'ml' : voiceName === 'neural-hi' ? 'hi' : (detectedLang !== 'en' ? detectedLang : (langSelect.value !== 'all' ? langSelect.value : 'ml'));
+      const audioUrl = getAudioStreamUrl(text, lang);
+      currentSpeechAudioUrl = audioUrl;
+
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+
+      ttsAudioElement.src = audioUrl;
+      ttsAudioElement.playbackRate = parseFloat(speedSlider.value) || 1.0;
+      ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
+      generatedPlayerCard.style.display = 'block';
+      playerEngineLabel.textContent = `🎙️ Real ${lang === 'ml' ? 'Malayalam (മലയാളം)' : lang.toUpperCase()} Speech (Neural Audio)`;
+      playerDuration.textContent = 'Streaming Audio...';
+
+      state.isPlaying = true;
+      playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
+      playbackStatus.classList.add('playing');
+      startActiveVisualizer(timbreSelect.value);
+
+      ttsAudioElement.onplay = () => {
+        state.isPlaying = true;
+        playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
+        playbackStatus.classList.add('playing');
+      };
+
+      ttsAudioElement.onended = () => {
+        state.isPlaying = false;
+        playbackStatus.textContent = 'Ready';
+        playbackStatus.classList.remove('playing');
+        playerDuration.textContent = 'Completed';
+        addToHistory(text, `Neural Voice (${lang.toUpperCase()})`, timbreSelect.value);
+      };
+
+      ttsAudioElement.onerror = (e) => {
+        console.error('Audio playback error:', e);
+        state.isPlaying = false;
+        playbackStatus.textContent = 'Audio Error';
+        playbackStatus.classList.remove('playing');
+      };
+
+      ttsAudioElement.play().catch(err => {
+        console.warn('Playback notice:', err);
+      });
+      return;
+    }
+
     if (window.speechSynthesis.speaking) {
       window.speechSynthesis.cancel();
     }
 
-    const voiceName = voiceSelect.value;
     const voice = state.voices.find(v => v.name === voiceName);
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -1070,7 +1172,19 @@ document.addEventListener('DOMContentLoaded', () => {
     btnSpeakNow.addEventListener('click', speakCurrentText);
 
     btnPauseSpeech.addEventListener('click', () => {
-      if (window.speechSynthesis.speaking) {
+      if (ttsAudioElement && ttsAudioElement.src && !ttsAudioElement.paused) {
+        ttsAudioElement.pause();
+        btnPauseSpeech.textContent = 'Resume';
+        state.isPlaying = false;
+        playbackStatus.textContent = 'Paused';
+        playbackStatus.classList.remove('playing');
+      } else if (ttsAudioElement && ttsAudioElement.src && ttsAudioElement.paused && ttsAudioElement.currentTime > 0) {
+        ttsAudioElement.play();
+        btnPauseSpeech.textContent = 'Pause';
+        state.isPlaying = true;
+        playbackStatus.textContent = 'Speaking...';
+        playbackStatus.classList.add('playing');
+      } else if (window.speechSynthesis.speaking) {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
           btnPauseSpeech.textContent = 'Pause';
@@ -1082,6 +1196,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnStopSpeech.addEventListener('click', () => {
+      if (ttsAudioElement) {
+        ttsAudioElement.pause();
+        ttsAudioElement.currentTime = 0;
+      }
       window.speechSynthesis.cancel();
       state.isPlaying = false;
       playbackStatus.textContent = 'Stopped';
@@ -1178,6 +1296,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = textInput.value.trim();
     if (!text) {
       alert('Please enter text to download audio.');
+      return;
+    }
+
+    const voiceName = voiceSelect.value;
+    const detectedLang = detectScriptLanguage(text);
+    const isNeuralMode = voiceName.startsWith('neural-') || detectedLang === 'ml' || detectedLang === 'hi';
+
+    // Download genuine neural MP3 audio (Real speech, no machine hum)
+    if (isNeuralMode || detectedLang !== 'en') {
+      const lang = voiceName === 'neural-ml' ? 'ml' : voiceName === 'neural-hi' ? 'hi' : (detectedLang !== 'en' ? detectedLang : 'ml');
+      const audioUrl = getAudioStreamUrl(text, lang);
+      
+      const a = document.createElement('a');
+      a.href = audioUrl;
+      a.target = '_blank';
+      a.download = `voicestudio_${lang}_speech.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 300);
       return;
     }
 
