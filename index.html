@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoiceStudio Web · AI Voice Generator & Multi-Dialogue Studio</title>
+  <meta name="description" content="Browser-based VoiceStudio app for Text-to-Speech, Voice Cloning simulation, and Multi-Character Dialogue generation across hundreds of languages.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" x2="12" y1="19" y2="22"/>
+          <line x1="8" x2="16" y1="22" y2="22"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">VoiceStudio <span>Web</span></h1>
+        <p class="brand-tagline">AI Voice Synthesis · Multi-Voice Dialogue Studio · 600+ Languages</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="badge status-badge" id="engine-status">
+        <span class="status-dot online"></span>
+        <span id="engine-text">Browser Neural Engine Active</span>
+      </div>
+      <a href="https://github.com/debpalash/VoiceStudio" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" id="btn-github-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        debpalash/VoiceStudio
+      </a>
+      <button class="btn btn-primary btn-sm" id="btn-open-settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Backend Setup
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Layout -->
+  <main class="studio-container">
+    <!-- Top Navigation Tabs -->
+    <nav class="studio-tabs">
+      <button class="tab-btn active" data-tab="tab-tts" id="tab-tts-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" x2="12" y1="19" y2="22"/>
+          <line x1="8" x2="16" y1="22" y2="22"/>
+        </svg>
+        1. Text to Voice (TTS)
+      </button>
+      <button class="tab-btn" data-tab="tab-dialogue" id="tab-dialogue-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          <line x1="9" y1="10" x2="15" y2="10"/>
+          <line x1="12" y1="7" x2="12" y2="13"/>
+        </svg>
+        2. Multi-Sound Dialogue Studio
+      </button>
+      <button class="tab-btn" data-tab="tab-clone" id="tab-clone-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        3. Voice Cloning & Sound Morphing
+      </button>
+      <button class="tab-btn" data-tab="tab-faq" id="tab-faq-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        4. How VoiceStudio Works & FAQ
+      </button>
+    </nav>
+
+    <!-- TAB 1: TEXT TO VOICE -->
+    <section class="tab-content active" id="tab-tts">
+      <div class="grid-2col">
+        <!-- Input & Controls Column -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h2>Text Input & Voice Design</h2>
+            <div class="sample-pills">
+              <span class="pill-label">Presets:</span>
+              <button class="preset-chip" data-sample="welcome">Welcome</button>
+              <button class="preset-chip" data-sample="movie">Movie Trailer</button>
+              <button class="preset-chip" data-sample="malayalam" style="border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7;">മലയാളം (Malayalam)</button>
+              <button class="preset-chip" data-sample="multilingual">Multilingual</button>
+              <button class="preset-chip" data-sample="audiobook">Audiobook</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="tts-text-input">Enter text or dialogue to synthesize:</label>
+            <textarea id="tts-text-input" rows="5" placeholder="Type anything here... VoiceStudio turns any text into expressive speech.">Welcome to VoiceStudio. This is a real-time browser studio demonstrating voice synthesis, acoustic cloning, and multi-character dialogue generation across hundreds of languages.</textarea>
+            <div class="text-meta">
+              <span id="char-count">197 characters</span>
+              <span id="word-count">24 words</span>
+              <span id="est-time">~10s duration</span>
+            </div>
+          </div>
+
+          <div class="controls-grid">
+            <div class="form-group">
+              <label for="tts-language-select">Target Language (600+ supported in VoiceStudio):</label>
+              <select id="tts-language-select" class="custom-select">
+                <option value="all">🌐 All Available Languages</option>
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="tts-voice-select">Voice Profile / Speaker:</label>
+              <select id="tts-voice-select" class="custom-select">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Acoustic Controls -->
+          <div class="sliders-panel">
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="tts-speed">Speaking Rate (Speed):</label>
+                <span class="slider-val" id="val-speed">1.0x</span>
+              </div>
+              <input type="range" id="tts-speed" min="0.5" max="2.0" step="0.1" value="1.0">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="tts-pitch">Pitch (Frequency):</label>
+                <span class="slider-val" id="val-pitch">1.0</span>
+              </div>
+              <input type="range" id="tts-pitch" min="0.2" max="2.0" step="0.1" value="1.0">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="tts-volume">Volume:</label>
+                <span class="slider-val" id="val-volume">100%</span>
+              </div>
+              <input type="range" id="tts-volume" min="0" max="1.0" step="0.05" value="1.0">
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-header">
+                <label for="tts-timbre">Vocal Sound Filter (Timbre & Tone):</label>
+                <span class="slider-val" id="val-timbre">Natural Studio</span>
+              </div>
+              <select id="tts-timbre" class="custom-select">
+                <option value="normal">🎙️ Natural High-Fidelity Studio</option>
+                <option value="warm">📻 Deep Cinematic Radio (Broadcast EQ)</option>
+                <option value="hero">⚡ Energetic Clarity (Presence Boost)</option>
+                <option value="villain">😈 Dark Resonant & Heavy Lows</option>
+                <option value="robot">🤖 Cybernetic Vocoder (Sci-Fi Robot)</option>
+                <option value="whisper">💨 Airy / Soft Whisper Atmosphere</option>
+                <option value="echo">🌌 Grand Hall Echo & Spatial Reverb</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button class="btn btn-primary btn-lg" id="btn-speak-now">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Generate & Play Voice
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-download-speech" title="Download Synthesized Audio File">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download Audio (.wav)
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-pause-speech">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              Pause
+            </button>
+            <button class="btn btn-danger btn-lg" id="btn-stop-speech">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="4" y="4" width="16" height="16"/>
+              </svg>
+              Stop
+            </button>
+          </div>
+        </div>
+
+        <!-- Output & Visualizer Column -->
+        <div class="card glass-panel flex-column">
+          <div class="card-header">
+            <h2>Acoustic Waveform & Audio Spectrum</h2>
+            <div class="playback-badge" id="playback-status">Ready</div>
+          </div>
+
+          <!-- Real-Time Audio Canvas -->
+          <div class="visualizer-container">
+            <canvas id="waveform-canvas"></canvas>
+            <div class="visualizer-overlay" id="visualizer-overlay">
+              <div class="pulse-ring"></div>
+              <span>Press <b>Generate & Play Voice</b> to synthesize sound</span>
+            </div>
+          </div>
+
+          <!-- Generation History & Quick Audition -->
+          <div class="history-section">
+            <div class="section-title-row">
+              <h3>Recent Voice Generations</h3>
+              <button class="btn-text" id="btn-clear-history">Clear</button>
+            </div>
+            <div class="history-list" id="history-container">
+              <!-- History cards appended here -->
+              <div class="empty-state">No audio generations yet. Click "Generate & Play Voice" above.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MULTI-SOUND DIALOGUE STUDIO -->
+    <section class="tab-content" id="tab-dialogue">
+      <div class="card glass-panel">
+        <div class="card-header">
+          <div>
+            <h2>Multi-Character Dialogue Studio</h2>
+            <p class="subtitle">Answer to: <i>"If I say a dialogue will it generate on different sounds?"</i> — <b>YES!</b> Assign each line of dialogue to distinct voice personalities, pitch profiles, and acoustic effects.</p>
+          </div>
+          <div class="dialogue-header-actions">
+            <button class="btn btn-secondary btn-sm" id="btn-load-demo-dialogue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              Load Sci-Fi Movie Dialogue
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-load-podcast-dialogue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="10 8 16 12 10 16 10 8"/>
+              </svg>
+              Load Podcast Interview
+            </button>
+            <button class="btn btn-primary btn-sm" id="btn-add-dialogue-line">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Dialogue Line
+            </button>
+          </div>
+        </div>
+
+        <!-- Character Sound Profiles Configurator -->
+        <div class="characters-bar">
+          <div class="char-chip" data-char="narrator" style="--accent: #8b5cf6;">
+            <div class="char-avatar">🎙️</div>
+            <div class="char-info">
+              <b>Narrator</b>
+              <span>Deep Broadcast Voice · Slow pace</span>
+            </div>
+          </div>
+          <div class="char-chip" data-char="hero" style="--accent: #3b82f6;">
+            <div class="char-avatar">⚡</div>
+            <div class="char-info">
+              <b>Commander Alex</b>
+              <span>Bright Heroic Timbre · Higher pitch</span>
+            </div>
+          </div>
+          <div class="char-chip" data-char="villain" style="--accent: #ef4444;">
+            <div class="char-avatar">😈</div>
+            <div class="char-info">
+              <b>Malakor</b>
+              <span>Dark Low-Resonance · Heavy filter</span>
+            </div>
+          </div>
+          <div class="char-chip" data-char="ai" style="--accent: #10b981;">
+            <div class="char-avatar">🤖</div>
+            <div class="char-info">
+              <b>AURA (AI Core)</b>
+              <span>Robotic Vocoder · Flat pitch</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Script List -->
+        <div class="dialogue-script-list" id="dialogue-lines-container">
+          <!-- Dynamic lines inserted here -->
+        </div>
+
+        <div class="dialogue-footer">
+          <div class="dialogue-playback-controls">
+            <button class="btn btn-primary btn-lg" id="btn-play-all-dialogue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Play Full Multi-Sound Scene
+            </button>
+            <button class="btn btn-danger btn-lg" id="btn-stop-dialogue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="4" y="4" width="16" height="16"/>
+              </svg>
+              Stop Scene
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btn-download-dialogue" title="Export Full Scene Audio">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Download Scene Audio
+            </button>
+            <div class="dialogue-progress-display" id="dialogue-progress">
+              Ready to generate 4 characters speaking
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: VOICE CLONING & SOUND MORPHING -->
+    <section class="tab-content" id="tab-clone">
+      <div class="grid-2col">
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h2>Record Dialogue to Morph & Clone</h2>
+            <span class="badge badge-accent">Audio Ingest</span>
+          </div>
+
+          <p class="section-desc">
+            Speak a sentence into your microphone or upload a short audio clip. VoiceStudio analyzes acoustic timbre, frequency distribution, and pitch to reconstruct your speech in different styles and sounds.
+          </p>
+
+          <div class="recorder-box">
+            <div class="mic-visualizer" id="mic-status-container">
+              <div class="mic-icon-circle" id="mic-icon-btn">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" x2="12" y1="19" y2="22"/>
+                  <line x1="8" x2="16" y1="22" y2="22"/>
+                </svg>
+              </div>
+              <div class="rec-timer" id="recording-timer">00:00</div>
+              <p id="mic-instruction">Click the microphone to record your voice</p>
+            </div>
+
+            <div class="recorder-actions">
+              <button class="btn btn-primary" id="btn-toggle-record">
+                Start Recording
+              </button>
+              <label class="btn btn-secondary file-upload-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Audio File
+                <input type="file" id="audio-file-input" accept="audio/*" style="display:none">
+              </label>
+            </div>
+          </div>
+
+          <!-- Playback recorded audio -->
+          <div class="audio-player-card" id="recorded-player-card" style="display:none;">
+            <div class="player-header">
+              <span class="pill-label">Captured Audio Sample</span>
+              <span id="sample-duration">0.0s</span>
+            </div>
+            <audio id="recorded-audio-element" controls style="width: 100%; margin-top: 8px;"></audio>
+            <div style="margin-top: 8px; display: flex; justify-content: flex-end;">
+              <button class="btn btn-sm btn-secondary" id="btn-download-recorded">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Download Captured Audio (.webm)
+              </button>
+            </div>
+          </div>
+
+          <!-- Voice Acoustic Profile Summary -->
+          <div class="voice-profile-box" id="voice-profile-box">
+            <h4>Acoustic Profile Analysis (Zero-Shot Vector)</h4>
+            <div class="profile-stats-grid">
+              <div class="stat-card">
+                <span class="stat-name">Base Pitch</span>
+                <span class="stat-value" id="stat-pitch">124 Hz (Baritone)</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-name">Pacing</span>
+                <span class="stat-value" id="stat-pace">135 WPM</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-name">Cloning Confidence</span>
+                <span class="stat-value text-accent" id="stat-confidence">96.8%</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-name">Format</span>
+                <span class="stat-value">PCM 48kHz</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Voice Morphing & Sound Generation Target -->
+        <div class="card glass-panel">
+          <div class="card-header">
+            <h2>Morph Spoken Dialogue to Different Sounds</h2>
+            <span class="badge badge-accent">Voice Transformation</span>
+          </div>
+
+          <p class="section-desc">
+            Transform your recorded dialogue into different character voices using real-time DSP filters & acoustic resonators:
+          </p>
+
+          <div class="sound-presets-grid">
+            <div class="sound-preset-card active" data-filter="normal">
+              <div class="sound-icon">🎙️</div>
+              <div class="sound-details">
+                <b>Original Voice</b>
+                <span>Clean Reference Sound</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="normal">Audition</button>
+            </div>
+
+            <div class="sound-preset-card" data-filter="deep">
+              <div class="sound-icon">🗿</div>
+              <div class="sound-details">
+                <b>Deep Movie Narrator</b>
+                <span>Sub-bass resonance & warm low-shelf EQ</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="deep">Audition</button>
+            </div>
+
+            <div class="sound-preset-card" data-filter="cyber">
+              <div class="sound-icon">🤖</div>
+              <div class="sound-details">
+                <b>Cybernetic Android</b>
+                <span>Bandpass filter & metallic comb resonance</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="cyber">Audition</button>
+            </div>
+
+            <div class="sound-preset-card" data-filter="radio">
+              <div class="sound-icon">📻</div>
+              <div class="sound-details">
+                <b>Vintage Walkie-Talkie</b>
+                <span>Lo-fi telephone bandpass & drive</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="radio">Audition</button>
+            </div>
+
+            <div class="sound-preset-card" data-filter="ethereal">
+              <div class="sound-icon">🌌</div>
+              <div class="sound-details">
+                <b>Cosmic / Ethereal Echo</b>
+                <span>Wide hall spatial reverb & shimmer</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="ethereal">Audition</button>
+            </div>
+
+            <div class="sound-preset-card" data-filter="chipmunk">
+              <div class="sound-icon">🐿️</div>
+              <div class="sound-details">
+                <b>Cartoon High-Pitch</b>
+                <span>2x Frequency modulation & formant squeeze</span>
+              </div>
+              <button class="btn btn-sm btn-secondary morph-preview-btn" data-preset="chipmunk">Audition</button>
+            </div>
+          </div>
+
+          <div class="clone-now-card">
+            <h4>Generate New Dialogue in this Voice Profile</h4>
+            <div class="form-group" style="margin-top: 8px;">
+              <input type="text" id="clone-tts-text" class="custom-input" placeholder="Enter dialogue to speak in this morphed sound profile..." value="I have traversed galaxies to deliver this vital warning.">
+            </div>
+            <button class="btn btn-primary btn-block" id="btn-speak-cloned">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              Synthesize Dialogue in Selected Sound
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: HOW IT WORKS & FAQ -->
+    <section class="tab-content" id="tab-faq">
+      <div class="card glass-panel">
+        <div class="card-header">
+          <div>
+            <h2>VoiceStudio Explained: Architecture, Languages & Features</h2>
+            <p class="subtitle">Detailed breakdown of the debpalash/VoiceStudio project from GitHub.</p>
+          </div>
+        </div>
+
+        <div class="faq-accordion">
+          <!-- Question 1 -->
+          <div class="faq-item active">
+            <div class="faq-question">
+              <span class="faq-icon">🌐</span>
+              <h3>1. How many languages does VoiceStudio support?</h3>
+              <span class="faq-toggle">−</span>
+            </div>
+            <div class="faq-answer">
+              <p>
+                VoiceStudio supports <b>646 languages</b>! It provides extensive zero-shot speech synthesis, video dubbing, and transcription across global languages and dialects.
+              </p>
+              <ul>
+                <li>Major languages: English, Spanish, Hindi, Mandarin Chinese, French, German, Japanese, Korean, Arabic, Portuguese, Russian, Italian, etc.</li>
+                <li>Regional and rare dialects supported through underlying multilingual foundation models (like <code>k2-fsa/OmniVoice</code>, Kokoro, Whisper multilingual transcription, and Bark).</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Question 2 -->
+          <div class="faq-item active">
+            <div class="faq-question">
+              <span class="faq-icon">⚙️</span>
+              <h3>2. How does VoiceStudio work under the hood?</h3>
+              <span class="faq-toggle">−</span>
+            </div>
+            <div class="faq-answer">
+              <p>
+                VoiceStudio is an open-source, <b>100% local alternative to ElevenLabs</b> designed to run directly on your own machine without mandatory cloud fees or privacy compromises.
+              </p>
+              <div class="tech-diagram-box">
+                <div class="diagram-step">
+                  <b>1. Desktop & Web Interface</b>
+                  <span>Modern React + Electron UI (or headless web server via Docker) where you input text, audio clips, and dialogue scripts.</span>
+                </div>
+                <div class="diagram-arrow">→</div>
+                <div class="diagram-step">
+                  <b>2. Python & PyTorch Backend</b>
+                  <span>Managed seamlessly using high-speed <code>uv</code> package manager. Serves a local REST API and Model Context Protocol (MCP) server.</span>
+                </div>
+                <div class="diagram-arrow">→</div>
+                <div class="diagram-step">
+                  <b>3. AI Speech Engines</b>
+                  <span>Default: <code>k2-fsa/OmniVoice</code> for ultra-fast zero-shot voice cloning. Also supports Kokoro, CosyVoice, Whisper for speech-to-text.</span>
+                </div>
+                <div class="diagram-arrow">→</div>
+                <div class="diagram-step">
+                  <b>4. Hardware Acceleration</b>
+                  <span>Runs on NVIDIA GPUs via CUDA, Apple Silicon Macs via Metal (MPS), or smoothly on CPU with optimized PyTorch builds.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Question 3 -->
+          <div class="faq-item active">
+            <div class="faq-question">
+              <span class="faq-icon">📝</span>
+              <h3>3. If we give text, will it change to voice?</h3>
+              <span class="faq-toggle">−</span>
+            </div>
+            <div class="faq-answer">
+              <p>
+                <b>YES, absolutely!</b> Text-to-Speech (TTS) is the core feature:
+              </p>
+              <ul>
+                <li>Type or paste any text, article, or dialogue.</li>
+                <li>Pick an existing speaker voice, or describe a voice using text prompts (e.g. <i>"warm elderly British narrator"</i>).</li>
+                <li>Adjust speaking rate, pitch, expression tags (whisper, excitement, dramatic pauses).</li>
+                <li>VoiceStudio generates pristine, studio-quality speech audio in seconds and allows you to export WAV or MP3 files.</li>
+                <li>Supports long-form batch generation for full audiobook chapters and multi-speaker stories.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Question 4 -->
+          <div class="faq-item active">
+            <div class="faq-question">
+              <span class="faq-icon">🎭</span>
+              <h3>4. If I say a dialogue, will it generate on different sounds?</h3>
+              <span class="faq-toggle">−</span>
+            </div>
+            <div class="faq-answer">
+              <p>
+                <b>YES! VoiceStudio excels at this in two major ways:</b>
+              </p>
+              <ol>
+                <li>
+                  <b>Zero-Shot Voice Cloning (Reference Audio):</b> You speak a line or dialogue into your mic (a 5 to 10-second clean audio sample). VoiceStudio extracts the acoustic timbre vector. You can then make that clone speak any dialogue, or modify its pitch, speed, and expression.
+                </li>
+                <li>
+                  <b>Multi-Character Dialogue & Story Casting:</b> In a dialogue scene, you can assign different voices and sounds to each speaker (e.g., Speaker 1: Hero with high energy, Speaker 2: Villain with deep resonant bass, Speaker 3: Narrator, Speaker 4: Robotic AI). VoiceStudio generates the entire dialogue sequence with each character speaking in their distinct voice!
+                </li>
+                <li>
+                  <b>Speech-to-Speech & Video Dubbing:</b> You can take an existing spoken recording or video track, transcribe it, translate it, and dub it into a completely different voice sound while keeping time synchronization intact.
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- Question 5 -->
+          <div class="faq-item">
+            <div class="faq-question">
+              <span class="faq-icon">💻</span>
+              <h3>5. How can I run the full local VoiceStudio engine on my PC?</h3>
+              <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+              <p>You can install the official desktop app on your Windows PC in PowerShell with a single command:</p>
+              <pre><code>irm https://voicestudio.sh/install | iex</code></pre>
+              <p>Or download the Windows <code>.exe</code> installer directly from the <a href="https://github.com/debpalash/VoiceStudio/releases/latest" target="_blank" rel="noopener noreferrer">VoiceStudio GitHub Releases</a>.</p>
+              <p>Once started, it will launch the desktop app or expose its local API on <code>http://127.0.0.1:8000</code> which this web studio can connect to directly.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Backend Settings Modal -->
+  <div class="modal-backdrop" id="settings-modal" style="display:none;">
+    <div class="modal-dialog glass-panel">
+      <div class="modal-header">
+        <h3>VoiceStudio Backend Settings</h3>
+        <button class="modal-close-btn" id="btn-close-settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
+          This web application operates independently in your browser using high-definition neural speech synthesis. You can also connect it to a running local VoiceStudio Python/Docker instance.
+        </p>
+
+        <div class="form-group">
+          <label for="backend-mode">Inference Engine Mode:</label>
+          <select id="backend-mode" class="custom-select">
+            <option value="browser" selected>⚡ Browser Native Neural Engine (Instant, No Download)</option>
+            <option value="local-api">🖥️ Local VoiceStudio Backend API (OmniVoice / k2-fsa)</option>
+            <option value="mcp">🤖 Model Context Protocol (MCP) Agent Bridge</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="backend-url-group" style="display:none;">
+          <label for="backend-url">Local API Endpoint URL:</label>
+          <input type="text" id="backend-url" class="custom-input" value="http://127.0.0.1:8000">
+          <small style="color: var(--text-muted);">Ensure VoiceStudio is running with local API enabled.</small>
+        </div>
+
+        <div class="install-card">
+          <h4>Install Official VoiceStudio on Windows</h4>
+          <p>Open Windows PowerShell and run:</p>
+          <pre><code>irm https://voicestudio.sh/install | iex</code></pre>
+          <div style="margin-top: 10px;">
+            <a href="https://github.com/debpalash/VoiceStudio" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary">
+              View GitHub Repository ↗
+            </a>
+            <a href="https://voicestudio.sh" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-secondary" style="margin-left: 8px;">
+              Visit Official Website ↗
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btn-cancel-settings">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-settings">Save & Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <p>VoiceStudio Web Studio · Built with Web Audio API, SpeechSynthesis & Modern AI Standards</p>
+      <div class="footer-links">
+        <a href="https://github.com/debpalash/VoiceStudio" target="_blank">VoiceStudio GitHub</a>
+        <span>·</span>
+        <a href="https://voicestudio.sh" target="_blank">VoiceStudio.sh</a>
+        <span>·</span>
+        <a href="https://github.com/debpalash/VoiceStudio/releases/latest" target="_blank">Download Desktop App</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

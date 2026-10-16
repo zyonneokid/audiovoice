@@ -1,0 +1,19 @@
+{
+  "name": "my-voice-studio-web",
+  "version": "1.0.0",
+  "description": "Browser-based VoiceStudio app for voice creation, speech synthesis, and multi-character dialogue generation.",
+  "main": "index.html",
+  "scripts": {
+    "start": "python server.py",
+    "serve": "npx serve -l 3000"
+  },
+  "keywords": [
+    "voicestudio",
+    "tts",
+    "speech-synthesis",
+    "voice-cloning",
+    "dialogue-studio"
+  ],
+  "author": "",
+  "license": "MIT"
+}
