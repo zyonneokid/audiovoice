@@ -3,20 +3,30 @@ import socketserver
 import webbrowser
 import urllib.request
 import urllib.parse
+import socket
 import os
 import sys
 
-PORT = 3000
+INITIAL_PORT = 3000
 DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=DIRECTORY, **kwargs)
 
+    def do_HEAD(self):
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path == "/api/tts":
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mpeg")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            return
+        super().do_HEAD()
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/tts":
-            # Proxy TTS audio request
             query = urllib.parse.parse_qs(parsed.query)
             tl = query.get("tl", ["ml"])[0]
             q = query.get("q", [""])[0]
@@ -45,20 +55,53 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         sys.stderr.write(f"[{self.log_date_time_string()}] {format % args}\n")
 
+def is_port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(('127.0.0.1', port)) == 0
+
+def find_available_server(start_port=3000, max_attempts=10):
+    socketserver.TCPServer.allow_reuse_address = True
+    for port in range(start_port, start_port + max_attempts):
+        try:
+            httpd = socketserver.TCPServer(("", port), Handler)
+            return httpd, port
+        except OSError:
+            continue
+    return None, None
+
 if __name__ == "__main__":
     os.chdir(DIRECTORY)
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        url = f"http://localhost:{PORT}"
+
+    # Check if port 3000 is already active and serving
+    if is_port_in_use(INITIAL_PORT):
         print("=" * 60)
-        print(f"[*] VoiceStudio Web Server running at: {url}")
-        print(f"[*] Serving files from: {DIRECTORY}")
-        print("[*] Press Ctrl+C to stop the server.")
+        print(f"[*] VoiceStudio Web Server is ALREADY RUNNING at: http://localhost:{INITIAL_PORT}")
+        print("[*] Opening your browser directly...")
         print("=" * 60)
         try:
-            webbrowser.open(url)
+            webbrowser.open(f"http://localhost:{INITIAL_PORT}")
         except Exception:
             pass
-        try:
-            httpd.serve_forever()
-        except KeyboardInterrupt:
-            print("\nShutting down VoiceStudio Web Server.")
+        sys.exit(0)
+
+    httpd, port = find_available_server(INITIAL_PORT)
+    if not httpd:
+        print(f"[!] Could not bind to port {INITIAL_PORT} through {INITIAL_PORT+9}. Opening index.html directly...")
+        webbrowser.open(os.path.join(DIRECTORY, "index.html"))
+        sys.exit(1)
+
+    url = f"http://localhost:{port}"
+    print("=" * 60)
+    print(f"[*] VoiceStudio Web Server started at: {url}")
+    print(f"[*] Serving files from: {DIRECTORY}")
+    print("[*] Press Ctrl+C to stop the server.")
+    print("=" * 60)
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down VoiceStudio Web Server.")

@@ -4,13 +4,12 @@ echo ========================================================
 echo        VoiceStudio Web - Starting Local Server
 echo ========================================================
 echo.
-echo Launching at: http://localhost:3000
+echo Launching VoiceStudio Web...
 echo Serving from: %~dp0
 echo.
 python "%~dp0server.py"
-if errorlevel 1 (
-    echo.
-    echo Python server encountered an error. Opening index.html directly...
-    start "" "%~dp0index.html"
-)
+echo.
+echo ========================================================
+echo VoiceStudio Web is ready. You can close this window.
+echo ========================================================
 pause
