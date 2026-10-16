@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const ttsAudioElement = document.getElementById('tts-audio-element');
   const playerEngineLabel = document.getElementById('player-engine-label');
   const playerDuration = document.getElementById('player-duration');
+  const btnTestSpeaker = document.getElementById('btn-test-speaker');
   let currentSpeechAudioUrl = null;
 
   // Persona Elements (Female, Male, Baby, Kids, Teenage, Elderly)
@@ -518,42 +519,75 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const personaConfig = PERSONA_CONFIGS[selectedPersona] || PERSONA_CONFIGS.male;
-      const userSpeed = parseFloat(speedSlider.value) || 1.0;
-      ttsAudioElement.playbackRate = Math.min(2.0, Math.max(0.5, personaConfig.playbackRate * userSpeed));
-      ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
       generatedPlayerCard.style.display = 'block';
       playerEngineLabel.textContent = `🎙️ ${personaConfig.name} · Real ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()} Speech`;
-      playerDuration.textContent = 'Playing...';
+      playerDuration.textContent = 'Loading audio...';
 
-      state.isPlaying = true;
-      playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
-      playbackStatus.classList.add('playing');
-      startActiveVisualizer(timbreSelect.value);
+      // Resume AudioContext if suspended
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+      }
 
-      ttsAudioElement.onplay = () => {
-        state.isPlaying = true;
-        playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
-        playbackStatus.classList.add('playing');
-      };
+      // Fetch as a local Blob to ensure instant, reliable playback with complete duration
+      fetch(audioUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.blob();
+        })
+        .then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          ttsAudioElement.src = blobUrl;
+          ttsAudioElement.muted = false;
+          ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
 
-      ttsAudioElement.onended = () => {
-        state.isPlaying = false;
-        playbackStatus.textContent = 'Ready';
-        playbackStatus.classList.remove('playing');
-        playerDuration.textContent = 'Completed';
-        addToHistory(text, `Neural Voice (${lang.toUpperCase()})`, timbreSelect.value);
-      };
+          const userSpeed = parseFloat(speedSlider.value) || 1.0;
+          const targetRate = Math.min(2.0, Math.max(0.5, personaConfig.playbackRate * userSpeed));
 
-      ttsAudioElement.onerror = (e) => {
-        console.error('Audio playback error:', e);
-        state.isPlaying = false;
-        playbackStatus.textContent = 'Audio Error';
-        playbackStatus.classList.remove('playing');
-      };
+          ttsAudioElement.onloadedmetadata = () => {
+            ttsAudioElement.playbackRate = targetRate;
+            playerDuration.textContent = `${Math.round(ttsAudioElement.duration || 2)}s`;
+          };
 
-      ttsAudioElement.play().catch(err => {
-        console.warn('Playback notice:', err);
-      });
+          ttsAudioElement.onplay = () => {
+            state.isPlaying = true;
+            playbackStatus.textContent = `Speaking ${lang === 'ml' ? 'Malayalam' : lang.toUpperCase()}...`;
+            playbackStatus.classList.add('playing');
+            startActiveVisualizer(timbreSelect.value);
+          };
+
+          ttsAudioElement.onended = () => {
+            state.isPlaying = false;
+            playbackStatus.textContent = 'Ready';
+            playbackStatus.classList.remove('playing');
+            playerDuration.textContent = 'Completed';
+            addToHistory(text, `Neural Voice (${lang.toUpperCase()})`, timbreSelect.value);
+          };
+
+          ttsAudioElement.onerror = (e) => {
+            console.warn('Audio tag error, switching to direct Web Audio:', e);
+            playBlobViaWebAudio(blob, targetRate);
+          };
+
+          const p = ttsAudioElement.play();
+          if (p !== undefined) {
+            p.catch(err => {
+              console.warn('HTML5 play blocked, using direct Web Audio playback:', err);
+              playBlobViaWebAudio(blob, targetRate);
+            });
+          }
+        })
+        .catch(err => {
+          console.warn('Fetch fallback to direct src:', err);
+          ttsAudioElement.src = audioUrl;
+          ttsAudioElement.muted = false;
+          ttsAudioElement.volume = parseFloat(volumeSlider.value) || 1.0;
+          ttsAudioElement.load();
+          ttsAudioElement.play().catch(e => console.error(e));
+        });
+
       return;
     }
 
@@ -1321,6 +1355,10 @@ document.addEventListener('DOMContentLoaded', () => {
       btnDownloadRecorded.addEventListener('click', handleDownloadRecorded);
     }
 
+    if (btnTestSpeaker) {
+      btnTestSpeaker.addEventListener('click', playSpeakerTestChime);
+    }
+
     audioFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -1331,6 +1369,82 @@ document.addEventListener('DOMContentLoaded', () => {
         analyzeRecordedAudio(8);
       }
     });
+  }
+
+  // ==========================================
+  // DIRECT WEB AUDIO DECODER & SPEAKER TEST
+  // ==========================================
+  function playBlobViaWebAudio(blob, rate = 1.0) {
+    try {
+      if (!state.audioCtx) {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (state.audioCtx.state === 'suspended') {
+        state.audioCtx.resume();
+      }
+
+      blob.arrayBuffer().then(buffer => {
+        state.audioCtx.decodeAudioData(buffer).then(audioBuffer => {
+          const source = state.audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.playbackRate.value = rate;
+
+          const gainNode = state.audioCtx.createGain();
+          gainNode.gain.value = parseFloat(volumeSlider.value) || 1.0;
+
+          source.connect(gainNode);
+          gainNode.connect(state.audioCtx.destination);
+
+          source.start(0);
+          state.isPlaying = true;
+          playbackStatus.textContent = 'Speaking (Direct Audio)...';
+          playbackStatus.classList.add('playing');
+          startActiveVisualizer(timbreSelect.value);
+
+          source.onended = () => {
+            state.isPlaying = false;
+            playbackStatus.textContent = 'Ready';
+            playbackStatus.classList.remove('playing');
+          };
+        }).catch(err => console.error('Web Audio decode error:', err));
+      });
+    } catch (e) {
+      console.error('playBlobViaWebAudio failure:', e);
+    }
+  }
+
+  function playSpeakerTestChime() {
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContextClass();
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // Play a musical test chime: C5, E5, G5, C6
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = ctx.currentTime + idx * 0.12;
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, start);
+
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.4, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(start);
+        osc.stop(start + 0.5);
+      });
+      alert('🔊 Speaker test chime is playing!\n\nIf you heard the 4 musical chimes, your sound is working.\n\nIf you did NOT hear anything:\n1. Check if your browser tab is muted (Right-click tab > Unmute site).\n2. Check your computer volume and speaker connection.');
+    } catch (e) {
+      alert('Could not initialize audio test: ' + e);
+    }
   }
 
   // ==========================================

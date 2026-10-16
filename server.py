@@ -42,6 +42,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header("Content-Type", "audio/mpeg")
                     self.send_header("Content-Length", str(len(audio_data)))
+                    self.send_header("Accept-Ranges", "bytes")
                     self.send_header("Access-Control-Allow-Origin", "*")
                     self.send_header("Content-Disposition", f'inline; filename="voicestudio_{tl}.mp3"')
                     self.end_headers()
